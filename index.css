@@ -1,0 +1,18 @@
+#heavenlybody {
+    max-height: 50px;
+    max-width: 50px;
+    position: relative;
+}
+
+#sunrise {
+    width: 400px;
+    height: 200px;
+    overflow: hidden;
+    /*background-image: url("./skyline.png");*/
+}
+
+#skyline {
+    position: relative;
+    top:0px;
+    left:0px;
+}
