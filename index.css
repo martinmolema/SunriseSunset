@@ -1,18 +1,32 @@
-#heavenlybody {
-    max-height: 50px;
-    max-width: 50px;
-    position: relative;
+.globalContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width:100vw;
+    height:50vh;
 }
-
 #sunrise {
     width: 400px;
     height: 200px;
     overflow: hidden;
-    /*background-image: url("./skyline.png");*/
+    position: absolute;
 }
 
-#skyline {
-    position: relative;
-    top:0px;
+#imageContainer,
+#backgroundContainer,
+#starsContainer {
+    position: absolute;
     left:0px;
+    top:0px;
+    width:400px;
+    height:200px;
+}
+
+#backgroundContainer {
+    top:44px;
+}
+
+#backdrop {
+    fill:darkgrey;
 }
