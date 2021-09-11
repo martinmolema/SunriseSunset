@@ -22,9 +22,19 @@ let HSL_SATURATION_WINDOWS=100;
 // How many stars to draw, which colors and sizes
 let MIN_STARS=10;
 let MAX_STARS=50;
-let STAR_COLORS=['yellow', 'red', 'blue', 'orange', 'white'];
+let STAR_COLORS_HSL=[
+    0, // red
+    233, //blue
+    191, // blue
+    63, // yellow
+    20, // orange
+];
 let MAX_STAR_SIZE=2.0;
 let MIN_STAR_SIZE=0.5;
+let STARS_TWINKLE_HSL_MIN_LIGHTNESS=20;
+let STARS_TWINKLE_HSL_MAX_LIGHTNESS=80;
+let STARS_TWINKLE_HSL_RANGE= STARS_TWINKLE_HSL_MAX_LIGHTNESS - STARS_TWINKLE_HSL_MIN_LIGHTNESS;
+
 
 // Variables to reference DOM Html elements
 let htmlContainer;
@@ -168,6 +178,8 @@ function moveHeavenlyBodies() {
         hslLightnessSky = HSL_LIGHTNESS_MIN_SKY;
         htmlWindows.style.fill = `hsl(${HSL_COLOR_NUMBER_WINDOWS}, ${HSL_SATURATION_WINDOWS}%, ${HSL_LIGHTNESS_MAX_WINDOWS}%)`;
         starOpacity = 1;
+        twinkleStars();
+
     }
 
     htmlStarContainer.style.opacity = starOpacity;
@@ -176,16 +188,64 @@ function moveHeavenlyBodies() {
 
 }//moveHeavenlyBodies
 
+/**
+ * Draw a random number of stars (within a certain range) and pick a random color from the HSL color array. Each
+ * star is an SVG-circle with a small radius
+ */
 function drawRandomStars() {
     const nrOfStars = Math.random() * (MAX_STARS - MIN_STARS) + MIN_STARS;
     let stars = '';
     for (let i = 0; i < nrOfStars; i++) {
         const x = Math.trunc( Math.random() * clientW ); // use full width
         const y = Math.trunc( Math.random() * clientH /2 ); // only fill top half
-        const color = STAR_COLORS[Math.trunc(Math.random() * (STAR_COLORS.length)-1)];
+        const color = STAR_COLORS_HSL[Math.trunc(Math.random() * (STAR_COLORS_HSL.length)-1)];
         const size = Math.random() * (MAX_STAR_SIZE - MIN_STAR_SIZE) + MIN_STAR_SIZE;
 
-        stars += `<circle r="${size}" cx="${x}" cy="${y}" stroke="none" fill="${color}" />`;
+        stars += `<circle class="star" r="${size}" cx="${x}" cy="${y}" stroke="none" fill="hsl(${color}, 100%, 50%)" />`;
     }
     htmlStars.innerHTML = stars;
-}
+}// drawRandomStars
+
+/**
+ * Search for stars and make them twinkle by parsing the current HSL-information (fill) and change the lightness
+ * This is done by increasing or decreasing the value of the HSL with a random value and keep it within certain ranges
+ */
+function twinkleStars() {
+    // regex for parsing an HSL color
+    let regex = /.*?\(([0-9]*)[\s,]*([0-9]*)[\s,%]*([0-9]*).*?\)/g;
+
+    // find all stars by classname
+    const stars = document.getElementsByClassName('star');
+
+    // cycle through all stars
+    for (const star of stars) {
+        // get the color-string and parse it using regex
+        const color = star.getAttribute('fill');
+
+        // convert result to an array using spread operator
+        const parts = [...color.matchAll(regex)];
+
+        // check if found
+        if (parts.length === 1) {
+            // get the constituents (these are the pure numbers, without a %-sign e.g.
+            const lightness  = parseInt(parts[0][3]);
+            const colornr    = parts[0][1];
+            const saturation = parts[0][2];
+
+            // calculate a change value in the given range. the range is split in halve so both positive and negative
+            // values are found, so the lightness can increase and decrease
+            const change = (STARS_TWINKLE_HSL_RANGE / 2) -
+                Math.trunc( Math.random() * STARS_TWINKLE_HSL_RANGE );
+
+            // put the new value in range
+            let newLightness = Math.max(
+                Math.min( lightness + change , STARS_TWINKLE_HSL_MAX_LIGHTNESS),
+                STARS_TWINKLE_HSL_MIN_LIGHTNESS);
+
+            // compose a new HSL-string and apply it to the star's fill attribute.
+            let hsl = `hsl(${colornr},${saturation}%,${newLightness}%)`;
+            star.setAttribute('fill', hsl);
+        }
+
+    }
+}// twinkleStars
